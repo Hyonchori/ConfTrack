@@ -50,24 +50,28 @@ def associate_conftrack(
 
     trk_conf_indices = [i for i in unmatched_trk_indices
                         if trk_list[i].is_lost() or trk_list[i].is_confirmed() or
-                        (trk_list[i].is_tentative() and trk_list[i].conf >= 0.7)]
+                        (trk_list[i].is_tentative() and trk_list[i].conf >= cfg.track_confirm_thr)]
     trk_tent_indices = [i for i in unmatched_trk_indices
-                        if trk_list[i].is_tentative() and trk_list[i].conf < 0.7]
+                        if trk_list[i].is_tentative() and trk_list[i].conf < cfg.track_confirm_thr]
 
     ''' First matching: high_confident_track <-> high_confident_detection (from BoTSORT) '''
     iou_cost_first, iou_gate_first = get_iou_cost(trk_list, det_list, trk_conf_indices, det_high_indices,
                                                   iou_dist_thresh=cfg.first_matching_iou_thresh)
-    emb_cost, emb_gate = get_embedding_cost(trk_list, det_list, trk_conf_indices, det_high_indices,
-                                            embedding_dist_thresh=cfg.first_matching_emb_thresh)
+    if extractor is not None:
+        emb_cost, emb_gate = get_embedding_cost(trk_list, det_list, trk_conf_indices, det_high_indices,
+                                                embedding_dist_thresh=cfg.first_matching_emb_thresh)
 
     if cfg.use_CFCM:
         iou_cost_first, _ = get_confidence_fused_cost(iou_cost_first, det_list, det_high_indices)
-        emb_cost, _ = get_confidence_fused_cost(emb_cost, det_list, det_high_indices)
+        if extractor is not None:
+            emb_cost, _ = get_confidence_fused_cost(emb_cost, det_list, det_high_indices)
 
-    emb_cost[emb_gate == 0] = 1.0
-    emb_cost[iou_gate_first == 0] = 1.0
-
-    cost_mat = np.minimum(iou_cost_first, emb_cost)  # cost matrix from BoTSORT
+    if extractor is not None:
+        emb_cost[emb_gate == 0] = 1.0
+        emb_cost[iou_gate_first == 0] = 1.0
+        cost_mat = np.minimum(iou_cost_first, emb_cost)  # cost matrix from BoTSORT
+    else:
+        cost_mat = iou_cost_first
 
     matches_first, unmatched_trk_conf_indices, unmatched_det_high_indices = linear_assignment(
         cost_mat, trk_conf_indices, det_high_indices,

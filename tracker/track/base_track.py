@@ -70,7 +70,8 @@ class BaseTrack:
         self.age += 1
         self.time_since_update += 1
         if self.is_confirmed() or self.is_lost():
-            self.x, self.x_cov = self.kf.predict(self.width, self.height, self.use_CPLT and self.is_lost())
+            self.x, self.x_cov = self.kf.predict(self.width, self.height,
+                                                 use_CPLT=self.use_CPLT and self.is_lost())
 
         self.width, self.height = self.state2wh()
 

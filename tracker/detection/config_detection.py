@@ -25,7 +25,10 @@ def get_detections(
     detections = []
 
     for res in predictions:
-        conf = float(res[4])
+        if len(res) == 7:
+            conf = float(res[4]) * float(res[5])
+        else:  # len(res) == 6:
+            conf = float(res[4])
         if conf < cfg.detection_low_thr:
             continue
         bbox = res[:4]

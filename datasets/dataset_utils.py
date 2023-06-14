@@ -1,5 +1,6 @@
 # util functions for dataset loading
 
+import math
 from typing import List
 
 import cv2
@@ -23,6 +24,58 @@ def preproc(image, input_size):
     return padded_img
 
 
+def letterbox(
+        img: np.ndarray,
+        new_shape=(640, 640),
+        color: int = (114., 114., 114.),
+        auto: bool = True,
+        stretch: bool = False,
+        stride: int = 32,
+        dnn_pad: bool = False,
+        center_focus: bool = False,
+):
+    # resize and pad image while meeting stride-multiple constraints
+    shape = img.shape[: 2]
+    if isinstance(new_shape, int):
+        new_shape = (new_shape, new_shape)
+
+    if dnn_pad:
+        new_shape = [stride * math.ceil(x / stride) for x in new_shape]
+
+    if img.shape[:2] == new_shape:
+        return img, 1., (0, 0)
+
+    # Scale ratio (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+
+    # Compute padding
+    ratio = r, r  # width, height ratios
+    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+    if auto:  # minimum rectangle
+        dw, dh = np.mod(dw, stride), np.mod(dh, stride)  # wh padding
+    elif stretch:  # stretch
+        dw, dh = 0.0, 0.0
+        new_unpad = (new_shape[1], new_shape[0])
+        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+
+    if shape[::-1] != new_unpad:  # resize
+        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+
+    if center_focus:
+        dw /= 2  # divide padding into 2 sides
+        dh /= 2
+        top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+        left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    else:
+        top, bottom = 0, int(round(dh + 0.1))
+        left, right = 0, int(round(dw + 0.1))
+
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+
+    return img, ratio, (dw, dh)
+
+
 class InferenceTransform:
     def __init__(
             self,
@@ -41,7 +94,8 @@ class InferenceTransform:
         if origin_size:
             img = img.copy().astype(np.float64)
         else:
-            img = preproc(img, self.img_size)
+            # img = preproc(img, self.img_size)
+            img = letterbox(img, self.img_size, auto=False, dnn_pad=False)[0].astype(np.float32)
 
         # bgr2rgb
         img = img[:, :, ::-1]
