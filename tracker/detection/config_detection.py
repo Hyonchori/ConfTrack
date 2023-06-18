@@ -32,7 +32,9 @@ def get_detections(
         if conf < cfg.detection_low_thr:
             continue
         bbox = res[:4]
-        cls = int(res[5])
+        cls = int(res[-1])
+        if cls != 0:  # person
+            continue
         detections.append(
             get_detection(xyxy=bbox, conf=conf, cls=cls)
         )

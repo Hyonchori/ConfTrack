@@ -25,6 +25,8 @@ class TrackerCFG:
         self.detector_conf_thr = 0.01
         self.detector_iou_thr = 0.7
         self.detector_weights = 'yolox_x_byte_ablation'
+        # self.detector_weights = 'yolox_x_byte_mot17'
+        # self.detector_weights = 'yolox_x_byte_mot20'
         self.use_private_det = True
         self.use_saved_det_result = False
         self.detector_result_dir = 'yolox_x_byte_mot17_ablation_origin'

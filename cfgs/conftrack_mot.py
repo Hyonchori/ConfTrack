@@ -7,31 +7,35 @@ FILE = Path(__file__).absolute()
 
 class TrackerCFG:
     def __init__(self):
-        self.tracker_name = 'ConfTrack'
+        self.tracker_name = 'ConfTrack_ablation_custom'
         self.cfg_path = FILE
         self.save_only_matched = True
         self.save_only_confirmed = True
 
         # contributions of ConfTrack
-        self.use_CWKU = True  # use Confidence Weighted Kalman Update
-        self.use_NSAK = True  # use Noise Scale Adaptive Kalman Filter
-        self.use_CPLT = True  # use Constant Prediction on Lost Track
+        self.use_CWKU = False  # use Confidence Weighted Kalman Update
+        self.use_NSAK = False  # use Noise Scale Adaptive Kalman Filter
+        self.use_CPLT = False  # use Constant Prediction on Lost Track
         self.use_CFCM = True  # use Confidence Fused Cost Matrix
-        self.use_LCTM = True  # use Low Confidence Track Management
+        self.use_LCTM = False  # use Low Confident Track Matching
 
         # attributes for detector
         self.type_detector = 'yolox'
         self.detector_input_size = None
         self.detector_conf_thr = 0.01
         self.detector_iou_thr = 0.7
-        self.detector_weights = 'yolox_x_byte_ablation'
+        # self.detector_weights = 'yolox_x_byte_ablation'
+        self.detector_weights = 'yolox_x_byte_mot17'
+        self.detector_weights = 'yolox_x_byte_mot20'
         self.use_private_det = True
         self.use_saved_det_result = True
-        # self.detector_result_dir = 'yolox_x_byte_mot17_ablation_origin'
-        # self.detector_result_dir = 'yolox_x_byte_mot17_origin'
-        # self.detector_result_dir = 'yolox_x_byte_mot20_ablation'
-        self.detector_result_dir = 'yolox_x_byte_mot20_origin'
-        # self.detector_result_dir = 'yolox_x_ocsort_dance_origin'
+        # self.detector_result_dir = 'yolox_x_byte_mot17_ablation_custom'
+        # self.detector_result_dir = 'yolox_x_coco_custom'
+        # self.detector_result_dir = 'yolox_x_byte_mot17_custom'
+        # self.detector_result_dir = 'yolox_x_byte_mot20_ablation_custom'
+        # self.detector_result_dir = 'yolox_x_byte_mot20_custom'
+        self.detector_result_dir = 'yolox_x_ocsort_dance_custom'
+        # self.detector_result_dir = 'yolox_x_coco_custom'
         self.fuse = True
         self.half = True
 
@@ -45,7 +49,7 @@ class TrackerCFG:
         self.nsa_amplify_factor = 100.
 
         # attributes for track
-        self.track_new_thr = 0.1  # confidence threshold for new track initialization
+        self.track_new_thr = 0.7  # confidence threshold for new track initialization
         self.track_confirm_thr = 0.7  # confidence threshold for track confirmation
         self.max_age = 30
         self.init_age = 3

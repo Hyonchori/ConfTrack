@@ -128,8 +128,6 @@ def main(args):
             if mot_dataset.dataset.use_detector:
                 img = img.to(device).type_as(next(detector.model.parameters()))
                 det = detector(img)[0]
-                # print(det)
-                # print(det.shape, ' private')
                 if det is not None:
                     det = det.cpu().numpy()
                     scale_coords(detector.input_size, det, img_raw[0].shape[:2], center_pad=False)
@@ -143,6 +141,7 @@ def main(args):
                     det = xywh2xyxy(det)
                 else:
                     det = np.empty((0, 6))
+
             detections = get_detections(trk_cfg, det)
             te_det = time.time()
 
@@ -151,12 +150,14 @@ def main(args):
                 if len(det):
                     bboxes = xyxy2xywh(det)
                     for bbox in bboxes:
+                        if bbox[-1] != 0:  # only save pedestrian
+                            continue
                         if len(bbox) == 7:
                             mot_det_pred += f'{i + 1},-1,{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]},{bbox[4] * bbox[5]}\n'
                         else:
                             mot_det_pred += f'{i + 1},-1,{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]},{bbox[4]}\n'
 
-            # visualize detection and tracking
+            # visualize detection
             ts_vis = time.time()
             if visualize:
                 plot_info(img_v, f'{vid_name}: {i + 1} / {len(mot_dataset)}',
@@ -216,7 +217,7 @@ def get_args():
     mot_root = '/home/jhc/Desktop/dataset/open_dataset/MOT'  # path to MOT dataset
     parser.add_argument('--mot_root', type=str, default=mot_root)
 
-    target_select = 'MOT17'  # select in ['MOT17', 'MOT20']
+    target_select = 'MOT20'  # select in ['MOT17', 'MOT20']
     parser.add_argument('--target_select', type=str, default=target_select)
 
     target_split = 'val'  # select in ['train', 'val', 'test']
@@ -240,7 +241,7 @@ def get_args():
     # General arguments for inference
     parser.add_argument('--device', type=str, default='0')
     parser.add_argument('--vis_progress_bar', action='store_true', default=True)
-    parser.add_argument('--run_name', type=str, default='custom_det')
+    parser.add_argument('--run_name', type=str, default='yolox_x_coco_custom')
     parser.add_argument('--vis_det', action='store_true', default=True)
     parser.add_argument('--visualize', action='store_true', default=False)
     parser.add_argument('--view_size', type=int, default=[720, 1280], nargs='+')  # [height, width]

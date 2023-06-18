@@ -25,6 +25,7 @@ from detector.detector_utils import scale_coords, clip_coords
 from tracker.detection.config_detection import get_detections
 from tracker.base_tracker import BaseTracker
 
+
 @torch.no_grad()
 def main(args):
     # Arguments for MOT dataset
@@ -34,6 +35,9 @@ def main(args):
     target_vid = args.target_vid
     if target_vid is not None and not isinstance(target_vid, list):
         target_vid = [target_vid]
+    target_det = args.target_det
+    if target_det is not None and not isinstance(target_det, list):
+        target_det = [target_det]
 
     # Arguments for tracker configuration
     trk_cfg_file = args.trk_cfg_file
@@ -68,6 +72,7 @@ def main(args):
         target_select=target_select,
         target_split=target_split,
         target_vid=target_vid,
+        target_det=target_det,
         cfg=trk_cfg,
         input_size=detector.input_size if detector.model is not None else view_size
     )
@@ -231,7 +236,7 @@ def main(args):
         if visualize:
             cv2.destroyWindow(vid_name)
 
-            # save tracking prediction for TrackEval
+        # save tracking prediction for TrackEval
         if save_pred:
             track_save_dir = os.path.join(save_dir, f'{target_select}-{target_split}', trk_cfg.tracker_name,
                                           'data')  # for using TrackEval code
@@ -267,10 +272,10 @@ def get_args():
     mot_root = '/home/jhc/Desktop/dataset/open_dataset/MOT'  # path to MOT dataset
     parser.add_argument('--mot_root', type=str, default=mot_root)
 
-    target_select = 'MOT20'  # select in ['MOT17', 'MOT20']
+    target_select = 'MOT17'  # select in ['MOT17', 'MOT20']
     parser.add_argument('--target_select', type=str, default=target_select)
 
-    target_split = 'test'  # select in ['train', 'val', 'test']
+    target_split = 'val'  # select in ['train', 'val', 'test']
     parser.add_argument('--target_split', type=str, default=target_split)
 
     target_vid = None  # None: all videos, other numbers: target videos
@@ -281,17 +286,18 @@ def get_args():
     parser.add_argument('--target_vid', type=int, default=target_vid, nargs='+')
 
     target_det = ['DPM', 'FRCNN', 'SDP']  # for MOT17, select in ['DPM', 'FRCNN', 'SDP']
+    target_det = 'FRCNN'
     parser.add_argument('--target_det', type=str, default=target_det, nargs='+')
 
     # Arguments for tracker
-    trk_cfg_file = 'conftrack'  # file name of target config in tracker_cfgs directory
+    trk_cfg_file = 'conftrack_mot'  # file name of target config in tracker_cfgs directory
     parser.add_argument('--trk_cfg_file', type=str, default=trk_cfg_file)
 
     # General arguments for inference
     parser.add_argument('--device', type=str, default='0')
     parser.add_argument('--vis_progress_bar', action='store_true', default=True)
-    parser.add_argument('--run_name', type=str, default='test')
-    parser.add_argument('--vis_det', action='store_true', default=False)
+    parser.add_argument('--run_name', type=str, default='yolox_CWKU')
+    parser.add_argument('--vis_det', action='store_true', default=True)
     parser.add_argument('--vis_trk', action='store_true', default=True)
     parser.add_argument('--visualize', action='store_true', default=False)
     parser.add_argument('--view_size', type=int, default=[720, 1280], nargs='+')  # [height, width]
